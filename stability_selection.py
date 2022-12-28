@@ -1,3 +1,4 @@
+import joblib
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +34,8 @@ def _get_support(base_estimator, reg_param_name, reg_value, X, y):
 class StabilitySelection(BaseEstimator, TransformerMixin):
     def __init__(self, base_estimator=LogisticRegression(penalty="l1", class_weight="balanced", solver="liblinear"),
                  reg_param_name="C", reg_grid=np.logspace(-2, 4, 25),
-                 n_bootstraps=100, bootstrap_prop=.5, threshold=.6, random_state=15, n_jobs=-1, stability_scores=None):
+                 n_bootstraps=100, bootstrap_prop=.5, threshold=.6, random_state=15, n_jobs=joblib.cpu_count() - 1,
+                 stability_scores=None):
         self.base_estimator = base_estimator
         self.reg_param_name = reg_param_name
         self.reg_grid = reg_grid
