@@ -2,7 +2,7 @@ import joblib
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin, _ClassNamePrefixFeaturesOutMixin, clone
 from sklearn.feature_selection import SelectFromModel
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils import check_array, check_X_y, safe_mask
@@ -12,31 +12,33 @@ from sklearn.utils.validation import check_is_fitted
 # Inspired by https://github.com/scikit-learn-contrib/stability-selection
 
 
-def _get_stability(base_estimator, reg_param_name, reg_grid, X, y, boot_idx):
+# Return selected variables along all the regularization path
+def _get_support_path(estimator, reg_param_name, reg_grid, X, y, boot_idx):
     X_boot = X[safe_mask(X, boot_idx), :]
     y_boot = y[boot_idx]
 
     selected_variables = [None] * len(reg_grid)
     for idx, reg_value in enumerate(reg_grid):
-        selected_variables[idx] = _get_support(clone(base_estimator), reg_param_name, reg_value, X_boot, y_boot)
+        selected_variables[idx] = _get_support(clone(estimator), reg_param_name, reg_value, X_boot, y_boot)
 
     return selected_variables
 
 
-def _get_support(base_estimator, reg_param_name, reg_value, X, y):
-    base_estimator.set_params(**{reg_param_name: reg_value})
-    base_estimator.fit(X, y)
+# Return selected variables for a given regularization value
+def _get_support(estimator, reg_param_name, reg_value, X, y):
+    estimator.set_params(**{reg_param_name: reg_value})
+    estimator.fit(X, y)
 
-    variable_selector = SelectFromModel(estimator=base_estimator, threshold=1e-8, prefit=True)
+    variable_selector = SelectFromModel(estimator=estimator, threshold=1e-8, prefit=True)
     return variable_selector.get_support()
 
 
-class StabilitySelection(BaseEstimator, TransformerMixin):
-    def __init__(self, base_estimator=LogisticRegression(penalty="l1", class_weight="balanced", solver="liblinear"),
-                 reg_param_name="C", reg_grid=np.logspace(-2, 4, 25),
-                 n_bootstraps=100, bootstrap_prop=.5, threshold=.6, random_state=15, n_jobs=joblib.cpu_count() - 1,
+class StabilitySelection(_ClassNamePrefixFeaturesOutMixin, TransformerMixin, BaseEstimator):
+    def __init__(self, estimator=LogisticRegression(penalty="l1", class_weight="balanced", solver="liblinear"),
+                 reg_param_name="C", reg_grid=list(np.logspace(-2, 4, 25)),
+                 n_bootstraps=100, bootstrap_prop=.5, threshold=.6, random_state=15, n_jobs=1,
                  stability_scores=None):
-        self.base_estimator = base_estimator
+        self.estimator = estimator
         self.reg_param_name = reg_param_name
         self.reg_grid = reg_grid
         self.n_bootstraps = n_bootstraps
@@ -46,27 +48,32 @@ class StabilitySelection(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
         self.stability_scores = stability_scores
 
+        self.is_fitted = False
         np.random.seed(self.random_state)
-        self.base_estimator.set_params(**{"random_state": self.random_state})
+        self.estimator.set_params(**{"random_state": self.random_state})
 
     def __sklearn_is_fitted__(self):
-        return self.stability_scores is not None
+        return self.is_fitted
 
     def fit(self, X, y, threshold=None):
         X, y = check_X_y(X, y, accept_sparse="csr")
 
         if not self.__sklearn_is_fitted__():
-            stability_scores = Parallel(n_jobs=self.n_jobs)(delayed(_get_stability)(
-                self.base_estimator, self.reg_param_name, self.reg_grid,
+            # Initial fit: build the stability scores
+            stability_scores = Parallel(n_jobs=self.n_jobs)(delayed(_get_support_path)(
+                self.estimator, self.reg_param_name, self.reg_grid,
                 X, y, np.random.choice(X.shape[0], size=int(X.shape[0] * self.bootstrap_prop))
             ) for _ in range(self.n_bootstraps))
 
             self.stability_scores = np.array(stability_scores).mean(axis=0).transpose()
 
-        self.base_estimator = self.base_estimator.fit(self.transform(X, threshold=threshold), y)
+        # Fit a final estimator using the stable features only
+        self.is_fitted = True
+        self.estimator = self.estimator.fit(self.transform(X, threshold=threshold), y)
 
         return self
 
+    # Return the stable features for a given stability threshold
     def get_support(self, indices=False, threshold=None):
         if threshold is not None and (not isinstance(threshold, float) or not (0.0 < threshold <= 1.0)):
             raise ValueError("threshold should be a float in (0, 1], got %s" % self.threshold)
@@ -76,6 +83,7 @@ class StabilitySelection(BaseEstimator, TransformerMixin):
 
         return mask if not indices else np.where(mask)[0]
 
+    # Restrict features to the stable ones
     def transform(self, X, threshold=None):
         check_is_fitted(self)
         X = check_array(X, accept_sparse="csr")
@@ -94,17 +102,19 @@ class StabilitySelection(BaseEstimator, TransformerMixin):
         self.fit(X, y)
         return self.transform(X, threshold=threshold)
 
+    # Return the final estimator predictions using only the stable features
     def predict(self, X, threshold=None):
         X = check_array(X, accept_sparse="csr")
 
-        return self.base_estimator.predict(self.transform(X, threshold=threshold))
+        return self.estimator.predict(self.transform(X, threshold=threshold))
 
     def score(self, X, y, sample_weight=None, threshold=None):
         X, y = check_X_y(X, y, accept_sparse="csr")
 
-        return self.base_estimator.score(self.transform(X, threshold=threshold), y, sample_weight=sample_weight)
+        return self.estimator.score(self.transform(X, threshold=threshold), y, sample_weight=sample_weight)
 
-    def plot_path(self, threshold_highlight=None, **kwargs):
+    # Return the stability path figure
+    def plot_path(self, threshold_highlight=None, xscale="log", **kwargs):
         check_is_fitted(self)
 
         threshold = self.threshold if threshold_highlight is None else threshold_highlight
@@ -122,7 +132,7 @@ class StabilitySelection(BaseEstimator, TransformerMixin):
 
         ax.set_ylabel("Stability score")
         ax.set_xlabel("Regularization")
-        ax.set_xscale("log")
+        ax.set_xscale(xscale)
 
         fig.tight_layout()
 
