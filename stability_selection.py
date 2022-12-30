@@ -48,12 +48,11 @@ class StabilitySelection(_ClassNamePrefixFeaturesOutMixin, TransformerMixin, Bas
         self.n_jobs = n_jobs
         self.stability_scores = stability_scores
 
-        self.is_fitted = False
         np.random.seed(self.random_state)
         self.estimator.set_params(**{"random_state": self.random_state})
 
     def __sklearn_is_fitted__(self):
-        return self.is_fitted
+        return self.stability_scores is not None
 
     def fit(self, X, y, threshold=None):
         X, y = check_X_y(X, y, accept_sparse="csr")
@@ -68,7 +67,6 @@ class StabilitySelection(_ClassNamePrefixFeaturesOutMixin, TransformerMixin, Bas
             self.stability_scores = np.array(stability_scores).mean(axis=0).transpose()
 
         # Fit a final estimator using the stable features only
-        self.is_fitted = True
         self.estimator = self.estimator.fit(self.transform(X, threshold=threshold), y)
 
         return self
