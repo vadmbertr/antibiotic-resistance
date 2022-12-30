@@ -136,11 +136,11 @@ def build_hp_grid(pipe, seed, n_jobs):
     return cv_grid
 
 
-def save_cv_results(cv_grid, datapath):
-    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(datapath, "cv_results.csv"))
+def save_cv_results(cv_grid, antibiotic, datapath):
+    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(datapath, "cv_results__{}.csv".format(antibiotic)))
 
 
-def run_one(X_gpa, X_snps, X_genexp, y, datapath, seed, n_jobs):
+def run_one(X_gpa, X_snps, X_genexp, y, antibiotic, datapath, seed, n_jobs):
     not_nan_idx = np.argwhere(np.logical_not(np.isnan(y)))
     X_gpa = X_gpa[not_nan_idx, :]
     X_snps = X_snps[not_nan_idx, :]
@@ -152,7 +152,8 @@ def run_one(X_gpa, X_snps, X_genexp, y, datapath, seed, n_jobs):
 
     X = np.concatenate([X_gpa, X_snps, X_genexp], axis=1)
     cv_grid = cv_grid.fit(X, y)
-    save_cv_results(cv_grid, datapath)
+
+    save_cv_results(cv_grid, antibiotic, datapath)
 
 
 def main(datapath, seed, n_jobs):
@@ -171,6 +172,7 @@ def main(datapath, seed, n_jobs):
             print(traceback.format_exc())
         else:
             print("Fitting done for {}".format(antibiotic))
+
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
