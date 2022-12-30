@@ -2,6 +2,7 @@ from itertools import combinations, product
 import os
 import pandas as pd
 import pickle
+import shutil
 import traceback
 
 import joblib
@@ -44,6 +45,8 @@ def build_pipeline(X_gpa, X_snps, X_genexp):
                                                   ("genexp", "passthrough", genexp_idx)])
 
     cachepath = ".cache"
+    if os.path.exists(cachepath):
+        shutil.rmtree(cachepath)
     if not os.path.exists(cachepath):
         os.mkdir(cachepath)
     pipe = Pipeline([("trans_ind", trans_ind), ("dim_red_ind", dim_red_ind),
