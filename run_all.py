@@ -169,7 +169,7 @@ def main(data_path, seed, n_jobs):
         print("Fitting {}".format(antibiotic))
         y = Y[antibiotic].to_numpy()
         try:
-            run_one(X_gpa, X_snps, X_genexp, y, data_path, seed, n_jobs)
+            run_one(X_gpa, X_snps, X_genexp, y, antibiotic, data_path, seed, n_jobs)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())
