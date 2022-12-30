@@ -22,8 +22,8 @@ from sklearn.svm import SVC
 from stability_selection import StabilitySelection
 
 
-def read_data(datapath):
-    with open(os.path.join(datapath, "dataset.pkl"), "rb") as f:
+def read_data(data_path):
+    with open(os.path.join(data_path, "dataset.pkl"), "rb") as f:
         data = pickle.load(f)
         Y = data["pheno"].iloc[:, 1:]
         X_gpa = data["X_gpa"]
@@ -33,7 +33,7 @@ def read_data(datapath):
     return X_gpa, X_snps, X_genexp, Y
 
 
-def build_pipeline(X_gpa, X_snps, X_genexp):
+def build_pipeline(X_gpa, X_snps, X_genexp, cache_path):
     gpa_idx = np.arange(0, X_gpa.shape[1] - 1)
     snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
@@ -44,15 +44,14 @@ def build_pipeline(X_gpa, X_snps, X_genexp):
                                                   ("snps", "passthrough", snps_idx),
                                                   ("genexp", "passthrough", genexp_idx)])
 
-    cachepath = ".cache"
-    if os.path.exists(cachepath):
-        shutil.rmtree(cachepath)
-    if not os.path.exists(cachepath):
-        os.mkdir(cachepath)
+    if os.path.exists(cache_path):
+        shutil.rmtree(cache_path)
+    os.mkdir(cache_path)
+
     pipe = Pipeline([("trans_ind", trans_ind), ("dim_red_ind", dim_red_ind),
                      ("dim_red", "passthrough"),
                      ("clf", DummyClassifier())],
-                    memory=Memory(location=cachepath))
+                    memory=Memory(location=cache_path))
 
     return pipe
 
@@ -136,37 +135,40 @@ def build_hp_grid(pipe, seed, n_jobs):
     return cv_grid
 
 
-def save_cv_results(cv_grid, antibiotic, datapath):
-    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(datapath, "cv_results__{}.csv".format(antibiotic)))
+def save_cv_results(cv_grid, antibiotic, data_path):
+    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(data_path, "cv_results__{}.csv".format(antibiotic)))
 
 
-def run_one(X_gpa, X_snps, X_genexp, y, antibiotic, datapath, seed, n_jobs):
+def run_one(X_gpa, X_snps, X_genexp, y, antibiotic, data_path, seed, n_jobs):
     not_nan_idx = np.argwhere(np.logical_not(np.isnan(y)))
     X_gpa = X_gpa[not_nan_idx, :]
     X_snps = X_snps[not_nan_idx, :]
     X_genexp = X_genexp[not_nan_idx, :]
     y = y[not_nan_idx].astype(int)
 
-    pipe = build_pipeline(X_gpa, X_snps, X_genexp)
+    cache_path = os.path.join(data_path, ".cache")
+    pipe = build_pipeline(X_gpa, X_snps, X_genexp, cache_path)
     cv_grid = build_hp_grid(pipe, seed, n_jobs)
 
     X = np.concatenate([X_gpa, X_snps, X_genexp], axis=1)
     cv_grid = cv_grid.fit(X, y)
 
-    save_cv_results(cv_grid, antibiotic, datapath)
+    save_cv_results(cv_grid, antibiotic, data_path)
+    shutil.rmtree(cache_path)
 
 
-def main(datapath, seed, n_jobs):
+def main(data_path, seed, n_jobs):
     np.random.seed(seed)
+    n_jobs = min(n_jobs, joblib.cpu_count())
 
-    X_gpa, X_snps, X_genexp, Y = read_data(datapath)
+    X_gpa, X_snps, X_genexp, Y = read_data(data_path)
     antibiotics = list(Y)
 
     for antibiotic in antibiotics:
         print("Fitting {}".format(antibiotic))
         y = Y[antibiotic].to_numpy()
         try:
-            run_one(X_gpa, X_snps, X_genexp, y, datapath, seed, n_jobs)
+            run_one(X_gpa, X_snps, X_genexp, y, data_path, seed, n_jobs)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())
