@@ -141,10 +141,10 @@ def save_cv_results(cv_grid, antibiotic, data_path):
 
 
 def run_one(X_gpa, X_snps, X_genexp, y, antibiotic, data_path, seed, n_jobs):
-    not_nan_idx = np.argwhere(np.logical_not(np.isnan(y)))
-    X_gpa = X_gpa[not_nan_idx, :]
-    X_snps = X_snps[not_nan_idx, :]
-    X_genexp = X_genexp[not_nan_idx, :]
+    not_nan_idx = np.argwhere(np.logical_not(np.isnan(y))).flatten()
+    X_gpa = X_gpa[not_nan_idx]
+    X_snps = X_snps[not_nan_idx]
+    X_genexp = X_genexp[not_nan_idx]
     y = y[not_nan_idx].astype(int)
 
     cache_path = os.path.join(data_path, ".cache")
