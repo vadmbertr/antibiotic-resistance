@@ -129,7 +129,7 @@ def build_hp_grid(pipe, seed, n_jobs):
                         [("C", np.logspace(-1, 1, 3), []), ("kernel", ["linear", "poly", "rbf", "sigmoid"], [])])]
     clf_grid = _create_grid(clf_grid_roots, clf_grid_params)
 
-    final_grid = merge_grids([dim_red_ind_grid, dim_red_grid, clf_grid])
+    final_grid = _merge_grids([dim_red_ind_grid, dim_red_grid, clf_grid])
     cv_grid = GridSearchCV(pipe, final_grid, scoring="balanced_accuracy", n_jobs=n_jobs, pre_dispatch="n_jobs",
                            verbose=2)
 
