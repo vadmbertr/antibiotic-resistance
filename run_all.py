@@ -89,14 +89,7 @@ def _merge_grids(grids):
 
 def build_hp_grid(pipe, seed, n_jobs):
     dim_red_ind_grid_roots = ["dim_red_ind__gpa", "dim_red_ind__snps", "dim_red_ind__genexp"]
-    dim_red_ind_grid_params = [("", ["drop", "passthrough"], []),
-                               ("", [TruncatedSVD(random_state=seed)],
-                                [("n_components", [64, 128, 256], [])]),
-                               ("", [KernelPCA(random_state=seed)],
-                                [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
-                                 ("n_components", [64, 128, 256], [])]),
-                               ("", [StabilitySelection(random_state=seed)],
-                                [("threshold", np.linspace(.6, .9, 4), [])])]
+    dim_red_ind_grid_params = [("", ["drop", "passthrough"], [])]
     dim_red_ind_grid = _create_grid(dim_red_ind_grid_roots, dim_red_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
