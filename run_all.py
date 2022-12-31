@@ -15,7 +15,7 @@ from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import AdaBoostClassifier, BaggingClassifier, ExtraTreesClassifier, \
     GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier, Perceptron, SGDClassifier
-from sklearn.model_selection import GridSearchCV, ParameterGrid
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -39,17 +39,11 @@ def build_pipeline(X_gpa, X_snps, X_genexp, cache_path):
     snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
 
-    trans_ind = ColumnTransformer(transformers=[("genexp", StandardScaler(), genexp_idx)],
-                                  remainder="passthrough")
-    dim_red_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
-                                                  ("snps", "passthrough", snps_idx),
-                                                  ("genexp", "passthrough", genexp_idx)])
+    trans_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
+                                                ("snps", "passthrough", snps_idx),
+                                                ("genexp", StandardScaler(), genexp_idx)])
 
-    if os.path.exists(cache_path):
-        shutil.rmtree(cache_path)
-    os.mkdir(cache_path)
-
-    pipe = Pipeline([("trans_ind", trans_ind), ("dim_red_ind", dim_red_ind),
+    pipe = Pipeline([("trans_ind", trans_ind),
                      ("dim_red", "passthrough"),
                      ("clf", DummyClassifier())],
                     memory=Memory(location=cache_path))
@@ -88,25 +82,18 @@ def _merge_grids(grids):
 
 
 def build_hp_grid(pipe, seed, n_jobs):
-    dim_red_ind_grid_roots = ["dim_red_ind__gpa", "dim_red_ind__snps", "dim_red_ind__genexp"]
-    dim_red_ind_grid_params = [("", ["drop", "passthrough"], []),
-                               ("", [TruncatedSVD(random_state=seed)],
-                                [("n_components", [64, 128, 256], [])]),
-                               ("", [KernelPCA(random_state=seed)],
-                                [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
-                                 ("n_components", [64, 128, 256], [])]),
-                               ("", [StabilitySelection(random_state=seed)],
-                                [("threshold", np.linspace(.6, .9, 4), [])])]
-    dim_red_ind_grid = _create_grid(dim_red_ind_grid_roots, dim_red_ind_grid_params)
+    trans_ind_grid_roots = ["trans_ind__gpa", "trans_ind__snps", "trans_ind__genexp"]
+    trans_ind_grid_params = [("", ["drop", "passthrough"], [])]
+    trans_ind_grid = _create_grid(trans_ind_grid_roots, trans_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
-    dim_red_grid_params = [("", ["passthrough",], []),
-                           ("", [TruncatedSVD(random_state=seed),],
+    dim_red_grid_params = [("", ["passthrough", ], []),
+                           ("", [TruncatedSVD(random_state=seed), ],
                             [("n_components", [64, 128, 256], [])]),
-                           ("", [KernelPCA(random_state=seed),],
+                           ("", [KernelPCA(random_state=seed), ],
                             [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
                              ("n_components", [64, 128, 256], [])]),
-                           ("", [StabilitySelection(random_state=seed),],
+                           ("", [StabilitySelection(random_state=seed), ],
                             [("threshold", np.linspace(.6, .9, 4), [])])]
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
@@ -115,9 +102,8 @@ def build_hp_grid(pipe, seed, n_jobs):
                         [("learning_rate", np.logspace(-2, 0, 3), [])]),
                        ("", [BaggingClassifier(random_state=seed)],
                         [("max_features", np.linspace(1/3, 2/3, 3), [])]),
-                       ("", [ExtraTreesClassifier(bootstrap=True, oob_score=True, class_weight="balanced",
-                                                  random_state=seed),
-                             RandomForestClassifier(oob_score=True, class_weight="balanced", random_state=seed)],
+                       ("", [ExtraTreesClassifier(bootstrap=True, class_weight="balanced", random_state=seed),
+                             RandomForestClassifier(class_weight="balanced", random_state=seed)],
                         [("criterion", ["gini", "log_loss"], [])]),
                        ("", [LogisticRegression(class_weight="balanced", max_iter=1000, random_state=seed),
                              PassiveAggressiveClassifier(class_weight="balanced", random_state=seed)],
@@ -129,9 +115,8 @@ def build_hp_grid(pipe, seed, n_jobs):
                         [("C", np.logspace(-1, 1, 3), []), ("kernel", ["linear", "poly", "rbf", "sigmoid"], [])])]
     clf_grid = _create_grid(clf_grid_roots, clf_grid_params)
 
-    final_grid = _merge_grids([dim_red_ind_grid, dim_red_grid, clf_grid])
-    cv_grid = GridSearchCV(pipe, final_grid, scoring="balanced_accuracy", n_jobs=n_jobs, pre_dispatch="n_jobs",
-                           verbose=2)
+    final_grid = _merge_grids([trans_ind_grid, dim_red_grid, clf_grid])
+    cv_grid = GridSearchCV(pipe, final_grid, scoring="balanced_accuracy", n_jobs=n_jobs, verbose=2)
 
     return cv_grid
 
@@ -140,14 +125,16 @@ def save_cv_results(cv_grid, antibiotic, data_path):
     pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(data_path, "cv_results__{}.csv".format(antibiotic)))
 
 
-def run_one(X_gpa, X_snps, X_genexp, y, antibiotic, data_path, seed, n_jobs):
-    not_nan_idx = np.argwhere(np.logical_not(np.isnan(y))).flatten()
-    X_gpa = X_gpa[not_nan_idx]
-    X_snps = X_snps[not_nan_idx]
-    X_genexp = X_genexp[not_nan_idx]
-    y = y[not_nan_idx].astype(int)
+def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, data_path, seed, n_jobs, cache_path):
+    y = Y[antibiotic].to_numpy()
 
-    cache_path = os.path.join(data_path, ".cache")
+    # there is no missing value in the regressors but there are in the target
+    mask = np.isfinite(y)
+    X_gpa = X_gpa[mask].astype(int)
+    X_snps = X_snps[mask].astype(int)
+    X_genexp = X_genexp[mask]
+    y = y[mask].astype(int)
+
     pipe = build_pipeline(X_gpa, X_snps, X_genexp, cache_path)
     cv_grid = build_hp_grid(pipe, seed, n_jobs)
 
@@ -155,26 +142,32 @@ def run_one(X_gpa, X_snps, X_genexp, y, antibiotic, data_path, seed, n_jobs):
     cv_grid = cv_grid.fit(X, y)
 
     save_cv_results(cv_grid, antibiotic, data_path)
-    shutil.rmtree(cache_path)
 
 
 def main(data_path, seed, n_jobs):
     np.random.seed(seed)
     n_jobs = min(n_jobs, joblib.cpu_count())
+    cache_path = os.path.join(data_path, ".cache")
 
     X_gpa, X_snps, X_genexp, Y = read_data(data_path)
     antibiotics = list(Y)
 
     for antibiotic in antibiotics:
         print("Fitting {}".format(antibiotic))
-        y = Y[antibiotic].to_numpy()
+
+        if os.path.exists(cache_path):
+            shutil.rmtree(cache_path)
+        os.mkdir(cache_path)
+
         try:
-            run_one(X_gpa, X_snps, X_genexp, y, antibiotic, data_path, seed, n_jobs)
+            run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, data_path, seed, n_jobs, cache_path)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())
         else:
             print("Fitting done for {}".format(antibiotic))
+        finally:
+            shutil.rmtree(cache_path)
 
 
 if __name__ == "__main__":
