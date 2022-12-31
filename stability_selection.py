@@ -1,8 +1,7 @@
-import joblib
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin, _ClassNamePrefixFeaturesOutMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.feature_selection import SelectFromModel
 from sklearn.linear_model import LogisticRegression
 from sklearn.utils import check_array, check_X_y, safe_mask
@@ -33,7 +32,7 @@ def _get_support(estimator, reg_param_name, reg_value, X, y):
     return variable_selector.get_support()
 
 
-class StabilitySelection(_ClassNamePrefixFeaturesOutMixin, TransformerMixin, BaseEstimator):
+class StabilitySelection(TransformerMixin, BaseEstimator):
     def __init__(self, estimator=LogisticRegression(penalty="l1", class_weight="balanced", solver="liblinear"),
                  reg_param_name="C", reg_grid=list(np.logspace(-2, 4, 25)),
                  n_bootstraps=100, bootstrap_prop=.5, threshold=.6, random_state=15, n_jobs=1,
