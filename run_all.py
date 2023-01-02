@@ -17,11 +17,11 @@ from sklearn.ensemble import AdaBoostClassifier, BaggingClassifier, ExtraTreesCl
 from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier, Perceptron, SGDClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.svm import SVC
 
 from custom_transformers.stability_selection import StabilitySelection
-from custom_transformers.symmetric_true_false import SymmetricTrueFalse
+from custom_transformers.symmetric_true_false import symmetric_true_false
 
 
 def read_data(data_path):
@@ -40,8 +40,8 @@ def build_pipeline(X_gpa, X_snps, X_genexp, cache_path):
     snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
 
-    trans_ind = ColumnTransformer(transformers=[("gpa", SymmetricTrueFalse(), gpa_idx),
-                                                ("snps", SymmetricTrueFalse(), snps_idx),
+    trans_ind = ColumnTransformer(transformers=[("gpa", symmetric_true_false, gpa_idx),
+                                                ("snps", symmetric_true_false, snps_idx),
                                                 ("genexp", StandardScaler(), genexp_idx)],
                                   remainder="drop")
     dim_red_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
