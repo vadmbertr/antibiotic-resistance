@@ -20,7 +20,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from stability_selection import StabilitySelection
+from projet.custom_transformers.stability_selection import StabilitySelection
+from projet.custom_transformers.symmetric_true_false import SymmetricTrueFalse
 
 
 def read_data(data_path):
@@ -39,8 +40,10 @@ def build_pipeline(X_gpa, X_snps, X_genexp, cache_path):
     snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
 
-    trans_ind = ColumnTransformer(transformers=[("genexp", StandardScaler(), genexp_idx)],
-                                  remainder="passthrough")
+    trans_ind = ColumnTransformer(transformers=[("gpa", SymmetricTrueFalse(), gpa_idx),
+                                                ("snps", SymmetricTrueFalse(), snps_idx),
+                                                ("genexp", StandardScaler(), genexp_idx)],
+                                  remainder="drop")
     dim_red_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
                                                   ("snps", "passthrough", snps_idx),
                                                   ("genexp", "passthrough", genexp_idx)])
@@ -132,8 +135,8 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, data_path, seed, n_jobs, cac
 
     # there is no missing value in the regressors but there are in the target
     mask = np.isfinite(y)
-    X_gpa = X_gpa[mask].astype(int)
-    X_snps = X_snps[mask].astype(int)
+    X_gpa = X_gpa[mask]
+    X_snps = X_snps[mask]
     X_genexp = X_genexp[mask]
     y = y[mask].astype(int)
 
@@ -162,7 +165,7 @@ def main(data_path, seed, n_jobs):
         os.mkdir(cache_path)
 
         try:
-            run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, data_path, seed, n_jobs, cache_path)
+            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, data_path, seed, n_jobs, cache_path)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())

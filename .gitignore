@@ -1,6 +1,9 @@
 .ipynb_checkpoints
 __pycache__/
 .cache
+mdl
+plt
+results
 dataset.pkl
 dataset.zip
 enonce.pdf
