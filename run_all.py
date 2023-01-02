@@ -20,8 +20,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from projet.custom_transformers.stability_selection import StabilitySelection
-from projet.custom_transformers.symmetric_true_false import SymmetricTrueFalse
+from custom_transformers.stability_selection import StabilitySelection
+from custom_transformers.symmetric_true_false import SymmetricTrueFalse
 
 
 def read_data(data_path):
