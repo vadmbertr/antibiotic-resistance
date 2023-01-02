@@ -126,11 +126,11 @@ def build_hp_grid(pipe, seed, n_jobs):
     return cv_grid
 
 
-def save_cv_results(cv_grid, antibiotic, data_path):
-    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(data_path, "cv_results__{}.csv".format(antibiotic)))
+def save_cv_results(cv_grid, antibiotic, save_path):
+    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(save_path, "cv_results__{}.csv".format(antibiotic)))
 
 
-def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, data_path, seed, n_jobs, cache_path):
+def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, cache_path, save_path):
     y = Y[antibiotic].to_numpy()
 
     # there is no missing value in the regressors but there are in the target
@@ -146,13 +146,17 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, data_path, seed, n_jobs, cac
     X = np.concatenate([X_gpa, X_snps, X_genexp], axis=1)
     cv_grid = cv_grid.fit(X, y)
 
-    save_cv_results(cv_grid, antibiotic, data_path)
+    save_cv_results(cv_grid, antibiotic, save_path)
 
 
 def main(data_path, seed, n_jobs):
     np.random.seed(seed)
     n_jobs = min(n_jobs, joblib.cpu_count())
     cache_path = os.path.join(data_path, ".cache")
+    save_path = os.path.join(data_path, "results/grid_search")
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
 
     X_gpa, X_snps, X_genexp, Y = read_data(data_path)
     antibiotics = list(Y)
@@ -165,7 +169,7 @@ def main(data_path, seed, n_jobs):
         os.mkdir(cache_path)
 
         try:
-            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, data_path, seed, n_jobs, cache_path)
+            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, seed, n_jobs, cache_path, save_path)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())
