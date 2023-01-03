@@ -5,11 +5,7 @@ import pickle
 import traceback
 
 import joblib
-import pandas as pd
 import numpy as np
-import seaborn as sns
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 
 from custom_transformers.stability_selection import StabilitySelection
