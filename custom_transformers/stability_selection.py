@@ -134,3 +134,43 @@ class StabilitySelection(TransformerMixin, BaseEstimator):
         fig.tight_layout()
 
         return fig, ax
+
+
+class StabilitySelectionTransformer(TransformerMixin, BaseEstimator):
+
+    def __init__(self, stability_scores, threshold=.6):
+        self.stability_scores = stability_scores
+        self.threshold = threshold
+
+    def __sklearn_is_fitted__(self):
+        return True
+
+    def fit(self, X, y=None, threshold=None):
+        return self
+
+    # Return the stable features for a given stability threshold
+    def get_support(self, X, indices=False, threshold=None):
+        if threshold is not None and (not isinstance(threshold, float) or not (0.0 < threshold <= 1.0)):
+            raise ValueError("threshold should be a float in (0, 1], got %s" % self.threshold)
+
+        cutoff = self.threshold if threshold is None else threshold
+        mask = (self.stability_scores[X.shape[1]].max(axis=1) > cutoff)
+
+        return mask if not indices else np.where(mask)[0]
+
+    # Restrict features to the stable ones
+    def transform(self, X, threshold=None):
+        X = check_array(X, accept_sparse="csr")
+
+        mask = self.get_support(X, threshold=threshold)
+
+        if len(mask) != X.shape[1]:
+            raise ValueError("X has a different shape than during fitting")
+        if not mask.any():
+            print("No features were selected")
+            return np.empty(0).reshape((X.shape[0], 0))
+
+        return X[:, safe_mask(X, mask)]
+
+    def fit_transform(self, X, y=None, threshold=None):
+        return self.transform(X, threshold=threshold)

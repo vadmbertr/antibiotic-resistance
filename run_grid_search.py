@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from custom_transformers.stability_selection import StabilitySelection
+from custom_transformers.stability_selection import StabilitySelectionTransformer
 from custom_transformers.standard_true_false import standard_true_false
 
 
@@ -60,6 +60,17 @@ def build_pipeline(X_gpa, X_snps, X_genexp, cache_path=None):
     return pipe
 
 
+def _get_stab_sel_trans(stab_sel_path):
+    stab_sel_trans = None
+
+    if os.path.exists(stab_sel_path):
+        with open(stab_sel_path, "rb") as f:
+            stability_scores = pickle.load(f)
+        stab_sel_trans = StabilitySelectionTransformer(stability_scores=stability_scores)
+
+    return stab_sel_trans
+
+
 def _create_grid(roots, params):
     def add_to_grid(g, r, p):
         if len(p[0]) > 0:
@@ -90,20 +101,23 @@ def _merge_grids(grids):
     return merged_grid
 
 
-def build_hp_grid(pipe, seed, n_jobs):
+def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
     dim_red_ind_grid_roots = ["dim_red_ind__gpa", "dim_red_ind__snps", "dim_red_ind__genexp"]
     dim_red_ind_grid_params = [("", ["drop", "passthrough"], [])]
     dim_red_ind_grid = _create_grid(dim_red_ind_grid_roots, dim_red_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
+
     dim_red_grid_params = [("", ["passthrough", ], []),
                            ("", [TruncatedSVD(random_state=seed), ],
                             [("n_components", [64, 128, 256], [])]),
                            ("", [KernelPCA(random_state=seed), ],
                             [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
-                             ("n_components", [64, 128, 256], [])]),
-                           ("", [StabilitySelection(random_state=seed), ],
-                            [("threshold", np.linspace(.6, .9, 4), [])])]
+                             ("n_components", [64, 128, 256], [])])]
+    stab_sel_trans = _get_stab_sel_trans(stab_sel_path)
+    if stab_sel_trans is not None:
+        dim_red_grid_params.append(("", [stab_sel_trans, ], [("threshold", np.linspace(.6, .9, 4), [])]))
+
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
     clf_grid_roots = ["clf"]
@@ -131,7 +145,7 @@ def save_cv_results(cv_grid, antibiotic, save_path):
     pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(save_path, "cv_results__{}.csv".format(antibiotic)))
 
 
-def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, cache_path, save_path):
+def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path, cache_path, save_path):
     y = Y[antibiotic].to_numpy()
 
     # there is no missing value in the regressors but there are in the target
@@ -142,7 +156,8 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, cache_path, sa
     y = y[mask].astype(int)
 
     pipe = build_pipeline(X_gpa, X_snps, X_genexp, cache_path)
-    cv_grid = build_hp_grid(pipe, seed, n_jobs)
+    cv_grid = build_hp_grid(pipe, seed, n_jobs, os.path.join(stab_sel_path,
+                                                             "stability_scores__{}.pkl".format(antibiotic)))
 
     X = np.concatenate([X_gpa, X_snps, X_genexp], axis=1)
     cv_grid = cv_grid.fit(X, y)
@@ -153,6 +168,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, cache_path, sa
 def main(data_path, seed, n_jobs):
     np.random.seed(seed)
     n_jobs = min(n_jobs, joblib.cpu_count())
+    stab_sel_path = os.path.join(data_path, "results/stab_sel")
     cache_path = os.path.join(data_path, ".cache")
     save_path = os.path.join(data_path, "results/grid_search")
 
@@ -170,7 +186,8 @@ def main(data_path, seed, n_jobs):
         os.mkdir(cache_path)
 
         try:
-            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, seed, n_jobs, cache_path, save_path)
+            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, seed, n_jobs, stab_sel_path,
+                    cache_path, save_path)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())
