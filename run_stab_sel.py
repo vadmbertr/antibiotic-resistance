@@ -24,7 +24,7 @@ def read_data(data_path):
 
 
 def save_stability_scores(stability_scores, antibiotic, save_path):
-    with open(os.path.join(save_path, "stability_scores__{}.pkl".format(antibiotic)), "rb") as f:
+    with open(os.path.join(save_path, "stability_scores__{}.pkl".format(antibiotic)), "wb") as f:
         pickle.dump(stability_scores, f)
 
 
