@@ -117,6 +117,8 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
     stab_sel_trans = _get_stab_sel_trans(stab_sel_path)
     if stab_sel_trans is not None:
         dim_red_grid_params.append(("", [stab_sel_trans, ], [("threshold", np.linspace(.6, .9, 4), [])]))
+    else:
+        print("NO stab_sel_trans")
 
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
