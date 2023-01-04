@@ -37,15 +37,16 @@ def build_pipeline(X_gpa, X_snps, X_genexp):
     snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
 
-    sel_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
-                                              ("snps", "passthrough", snps_idx),
-                                              ("genexp", "passthrough", genexp_idx)])
     trans_ind = ColumnTransformer(transformers=[("gpa", standard_true_false, gpa_idx),
                                                 ("snps", standard_true_false, snps_idx),
                                                 ("genexp", StandardScaler(), genexp_idx)],
                                   remainder="drop")
+    sel_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
+                                              ("snps", "passthrough", snps_idx),
+                                              ("genexp", "passthrough", genexp_idx)],
+                                  remainder="drop")
 
-    pipe = Pipeline([("sel_ind", sel_ind), ("trans_ind", trans_ind), ("dim_red", "passthrough"),
+    pipe = Pipeline([("trans_ind", trans_ind), ("sel_ind", sel_ind), ("dim_red", "passthrough"),
                      ("clf", DummyClassifier())])
 
     return pipe
