@@ -6,7 +6,6 @@ import pickle
 import traceback
 
 import joblib
-from joblib import parallel_backend
 import numpy as np
 from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import KernelPCA
@@ -150,8 +149,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path,
                                                              "stability_scores__{}.pkl".format(antibiotic)))
 
     X = np.concatenate([X_gpa, X_snps, X_genexp], axis=1)
-    with parallel_backend("loky", inner_max_num_threads=1, n_jobs=n_jobs):
-        cv_grid = cv_grid.fit(X, y)
+    cv_grid = cv_grid.fit(X, y)
 
     save_cv_results(cv_grid, antibiotic, save_path)
 
