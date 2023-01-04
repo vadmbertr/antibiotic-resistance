@@ -41,7 +41,6 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, save_path):
 
     stability_scores = {}
     for comb in product([True, False], repeat=3):
-        print(comb)
         X = []
 
         for i in range(len(comb)):

@@ -71,7 +71,7 @@ def get_f4_pipeline(antibiotic, gpa_idx, snps_idx, genexp_idx, seed):
     return pipe
 
 
-def build_voting_clf(f0_pipeline, f1_pipeline, f2_pipeline, f3_pipeline, f4_pipeline):
+def get_voting_clf(f0_pipeline, f1_pipeline, f2_pipeline, f3_pipeline, f4_pipeline):
     return VotingClassifier([("f0", f0_pipeline), ("f1", f1_pipeline), ("f2", f2_pipeline), ("f3", f3_pipeline),
                              ("f4", f4_pipeline)], voting="soft")
 
@@ -90,9 +90,9 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, save_path):
     X_genexp = X_genexp[mask]
     y = y[mask].astype(int)
 
-    gpa_idx = np.arange(0, X_gpa.shape[1] - 1)
-    snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
-    genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
+    gpa_idx = np.arange(0, X_gpa.shape[1])
+    snps_idx = np.arange(0, X_snps.shape[1]) + gpa_idx[-1] + 1
+    genexp_idx = np.arange(0, X_genexp.shape[1]) + snps_idx[-1] + 1
 
     f0_pipeline = get_f0_pipeline(antibiotic, gpa_idx, snps_idx, genexp_idx, seed)
     f1_pipeline = get_f1_pipeline(antibiotic, gpa_idx, snps_idx, genexp_idx, seed)
@@ -100,7 +100,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, save_path):
     f3_pipeline = get_f3_pipeline(antibiotic, gpa_idx, snps_idx, genexp_idx, seed)
     f4_pipeline = get_f4_pipeline(antibiotic, gpa_idx, snps_idx, genexp_idx, seed)
 
-    voting_clf = build_voting_clf(f0_pipeline, f1_pipeline, f2_pipeline, f3_pipeline, f4_pipeline)
+    voting_clf = get_voting_clf(f0_pipeline, f1_pipeline, f2_pipeline, f3_pipeline, f4_pipeline)
 
     res = cross_val_score(voting_clf, np.concatenate([X_gpa, X_snps, X_genexp], axis=1), y, scoring="balanced_accuracy",
                           n_jobs=n_jobs)

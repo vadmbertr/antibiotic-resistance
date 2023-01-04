@@ -38,9 +38,9 @@ def _build_reg_pipeline(trans, idx):
 
 
 def get_voting_clf(X_gpa, X_snps, X_genexp):
-    gpa_idx = np.arange(0, X_gpa.shape[1] - 1)
-    snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
-    genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
+    gpa_idx = np.arange(0, X_gpa.shape[1])
+    snps_idx = np.arange(0, X_snps.shape[1]) + gpa_idx[-1] + 1
+    genexp_idx = np.arange(0, X_genexp.shape[1]) + snps_idx[-1] + 1
 
     gpa_pipe = _build_reg_pipeline(standard_true_false, gpa_idx)
     snps_pipe = _build_reg_pipeline(standard_true_false, snps_idx)

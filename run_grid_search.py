@@ -33,9 +33,9 @@ def read_data(data_path):
 
 
 def build_pipeline(X_gpa, X_snps, X_genexp):
-    gpa_idx = np.arange(0, X_gpa.shape[1] - 1)
-    snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
-    genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
+    gpa_idx = np.arange(0, X_gpa.shape[1])
+    snps_idx = np.arange(0, X_snps.shape[1]) + gpa_idx[-1] + 1
+    genexp_idx = np.arange(0, X_genexp.shape[1]) + snps_idx[-1] + 1
 
     trans_ind = ColumnTransformer(transformers=[("gpa", standard_true_false, gpa_idx),
                                                 ("snps", standard_true_false, snps_idx),
@@ -117,11 +117,11 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
                         [("n_estimators", [100, 300, 500], []), ("max_depth", [None, 10, 100], []),
                          ("max_features", ["sqrt", "log2"], [])]),
                        ("", [LogisticRegression(penalty="l1", solver="liblinear", class_weight="balanced",
-                                                max_iter=1000, random_state=seed)],
+                                                max_iter=10000, random_state=seed)],
                         [("C", np.logspace(-1, 1, 3), [])]),
                        ("", [SGDClassifier(penalty="l1", class_weight="balanced", random_state=seed)],
                         [("loss", ["hinge", "log_loss"], []), ("alpha", np.logspace(-5, -3, 3), [])]),
-                       ("", [SVC(class_weight="balanced", max_iter=10000, random_state=seed)],
+                       ("", [SVC(class_weight="balanced", random_state=seed)],
                         [("C", np.logspace(-1, 1, 3), []), ("kernel", ["linear", "poly", "rbf", "sigmoid"], [])])]
     clf_grid = _create_grid(clf_grid_roots, clf_grid_params)
 
