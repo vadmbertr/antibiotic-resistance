@@ -169,7 +169,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path,
 
 def main(data_path, seed, n_jobs):
     np.random.seed(seed)
-    n_jobs = min(n_jobs, joblib.cpu_count())
+    n_jobs = min(n_jobs, joblib.cpu_count() - 1)
     stab_sel_path = os.path.join(data_path, "results/stab_sel")
     cache_path = os.path.join(data_path, ".cache")
     save_path = os.path.join(data_path, "results/grid_search")
