@@ -39,21 +39,20 @@ def build_pipeline(X_gpa, X_snps, X_genexp, cache_path=None):
     snps_idx = np.arange(0, X_snps.shape[1] - 1) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1] - 1) + snps_idx[-1] + 1
 
+    sel_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
+                                              ("snps", "passthrough", snps_idx),
+                                              ("genexp", "passthrough", genexp_idx)])
     trans_ind = ColumnTransformer(transformers=[("gpa", standard_true_false, gpa_idx),
                                                 ("snps", standard_true_false, snps_idx),
                                                 ("genexp", StandardScaler(), genexp_idx)],
                                   remainder="drop")
-    dim_red_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
-                                                  ("snps", "passthrough", snps_idx),
-                                                  ("genexp", "passthrough", genexp_idx)])
 
     if cache_path is not None:
         memory = Memory(location=cache_path)
     else:
         memory = None
 
-    pipe = Pipeline([("trans_ind", trans_ind), ("dim_red_ind", dim_red_ind),
-                     ("dim_red", "passthrough"),
+    pipe = Pipeline([("sel_ind", sel_ind), ("trans_ind", trans_ind), ("dim_red", "passthrough"),
                      ("clf", DummyClassifier())],
                     memory=memory)
 
@@ -102,15 +101,12 @@ def _merge_grids(grids):
 
 
 def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
-    dim_red_ind_grid_roots = ["dim_red_ind__gpa", "dim_red_ind__snps", "dim_red_ind__genexp"]
-    dim_red_ind_grid_params = [("", ["drop", "passthrough"], [])]
-    dim_red_ind_grid = _create_grid(dim_red_ind_grid_roots, dim_red_ind_grid_params)
+    sel_ind_grid_roots = ["sel_ind__gpa", "sel_ind__snps", "sel_ind__genexp"]
+    sel_ind_grid_params = [("", ["drop", "passthrough"], [])]
+    sel_ind_grid = _create_grid(sel_ind_grid_roots, sel_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
-
     dim_red_grid_params = [("", ["passthrough", ], []),
-                           ("", [TruncatedSVD(random_state=seed), ],
-                            [("n_components", [64, 128, 256], [])]),
                            ("", [KernelPCA(random_state=seed), ],
                             [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
                              ("n_components", [64, 128, 256], [])])]
@@ -119,7 +115,6 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
         dim_red_grid_params.append(("", [stab_sel_trans, ], [("threshold", np.linspace(.6, .9, 4), [])]))
     else:
         print("NO stab_sel_trans")
-
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
     clf_grid_roots = ["clf"]
@@ -137,7 +132,7 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
                         [("C", np.logspace(-1, 1, 3), []), ("kernel", ["linear", "poly", "rbf", "sigmoid"], [])])]
     clf_grid = _create_grid(clf_grid_roots, clf_grid_params)
 
-    final_grid = _merge_grids([dim_red_ind_grid, dim_red_grid, clf_grid])
+    final_grid = _merge_grids([sel_ind_grid, dim_red_grid, clf_grid])
     cv_grid = GridSearchCV(pipe, final_grid, scoring="balanced_accuracy", n_jobs=n_jobs, verbose=2)
 
     return cv_grid
