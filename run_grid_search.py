@@ -10,7 +10,7 @@ import joblib
 from joblib import Memory
 import numpy as np
 from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import KernelPCA, TruncatedSVD
+from sklearn.decomposition import KernelPCA
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, SGDClassifier
