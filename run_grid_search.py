@@ -48,7 +48,7 @@ def build_pipeline(X_gpa, X_snps, X_genexp, cache_path=None):
                                   remainder="drop")
 
     if cache_path is not None:
-        memory = Memory(location=cache_path)
+        memory = Memory(location=cache_path, verbose=0)
     else:
         memory = None
 
@@ -133,7 +133,7 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
     clf_grid = _create_grid(clf_grid_roots, clf_grid_params)
 
     final_grid = _merge_grids([sel_ind_grid, dim_red_grid, clf_grid])
-    cv_grid = GridSearchCV(pipe, final_grid, scoring="balanced_accuracy", n_jobs=n_jobs, verbose=0)
+    cv_grid = GridSearchCV(pipe, final_grid, scoring="balanced_accuracy", n_jobs=n_jobs, verbose=1)
 
     return cv_grid
 
