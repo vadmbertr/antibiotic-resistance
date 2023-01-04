@@ -122,7 +122,7 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
                         [("learning_rate", np.logspace(-2, 0, 3), [])]),
                        ("", [RandomForestClassifier(class_weight="balanced", random_state=seed)],
                         [("n_estimators", [100, 300, 500], []), ("max_depth", [None, 10, 100], []),
-                         ("max_features", ["sqrt", "log2", None], [])]),
+                         ("max_features", ["sqrt", "log2"], [])]),
                        ("", [LogisticRegression(penalty="l1", solver="liblinear", class_weight="balanced",
                                                 max_iter=1000, random_state=seed)],
                         [("C", np.logspace(-1, 1, 3), [])]),
