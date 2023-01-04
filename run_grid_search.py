@@ -166,7 +166,7 @@ def main(data_path, seed, n_jobs):
     np.random.seed(seed)
     n_jobs = min(n_jobs, joblib.cpu_count() - 1)
     stab_sel_path = os.path.join(data_path, "results/stab_sel")
-    cache_path = os.path.join(data_path, ".cache")
+    cache_path = os.path.join(data_path, ".cache/grid_search")
     save_path = os.path.join(data_path, "results/grid_search")
 
     if not os.path.exists(save_path):
@@ -180,7 +180,7 @@ def main(data_path, seed, n_jobs):
 
         if os.path.exists(cache_path):
             shutil.rmtree(cache_path)
-        os.mkdir(cache_path)
+        os.makedirs(cache_path)
 
         try:
             run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, seed, n_jobs, stab_sel_path,
