@@ -18,7 +18,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from custom_transformers.stability_selection import StabilitySelectionTransformer
-from custom_transformers.standard_true_false import standard_true_false
 
 
 def read_data(data_path):
@@ -37,8 +36,8 @@ def build_pipeline(X_gpa, X_snps, X_genexp):
     snps_idx = np.arange(0, X_snps.shape[1]) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1]) + snps_idx[-1] + 1
 
-    trans_ind = ColumnTransformer(transformers=[("gpa", standard_true_false, gpa_idx),
-                                                ("snps", standard_true_false, snps_idx),
+    trans_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
+                                                ("snps", "passthrough", snps_idx),
                                                 ("genexp", StandardScaler(), genexp_idx)],
                                   remainder="drop")
     sel_ind = ColumnTransformer(transformers=[("gpa", "passthrough", gpa_idx),
