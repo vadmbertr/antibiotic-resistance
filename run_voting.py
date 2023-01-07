@@ -18,7 +18,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from custom_transformers.stability_selection import StabilitySelectionTransformer
-from custom_transformers.standard_true_false import standard_true_false
 
 
 def read_data(data_path):
@@ -42,8 +41,8 @@ def get_voting_clf(X_gpa, X_snps, X_genexp):
     snps_idx = np.arange(0, X_snps.shape[1]) + gpa_idx[-1] + 1
     genexp_idx = np.arange(0, X_genexp.shape[1]) + snps_idx[-1] + 1
 
-    gpa_pipe = _build_reg_pipeline(standard_true_false, gpa_idx)
-    snps_pipe = _build_reg_pipeline(standard_true_false, snps_idx)
+    gpa_pipe = _build_reg_pipeline("passthrough", gpa_idx)
+    snps_pipe = _build_reg_pipeline("passthrough", snps_idx)
     genexp_pipe = _build_reg_pipeline(StandardScaler(), genexp_idx)
 
     return VotingClassifier([("gpa", gpa_pipe), ("snps", snps_pipe), ("genexp", genexp_pipe)], voting="soft")

@@ -16,7 +16,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from custom_transformers.multiple_testing import MultipleTestingTransformer
+from custom_transformers.multiple_testing import MultipleTesting
 
 
 def read_data(data_path):
@@ -48,17 +48,6 @@ def build_pipeline(X_gpa, X_snps, X_genexp):
                      ("clf", DummyClassifier())])
 
     return pipe
-
-
-def _get_mul_test_trans(mul_test_path):
-    mul_test_trans = None
-
-    if os.path.exists(mul_test_path):
-        with open(mul_test_path, "rb") as f:
-            selected_regressors = pickle.load(f)
-        mul_test_trans = MultipleTestingTransformer(selected_regressors=selected_regressors)
-
-    return mul_test_trans
 
 
 def _create_grid(roots, params):
@@ -97,7 +86,7 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path, mul_test_path):
     sel_ind_grid = _create_grid(sel_ind_grid_roots, sel_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
-    dim_red_grid_params = [("", [_get_mul_test_trans(mul_test_path), ], []), ]
+    dim_red_grid_params = [("", [MultipleTesting(), ], ["alpha", (.01, .05, .1)]), ]
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
     clf_grid_roots = ["clf"]

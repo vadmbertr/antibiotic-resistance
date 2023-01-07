@@ -9,15 +9,14 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from custom_transformers.stability_selection import StabilitySelection
-from custom_transformers.standard_true_false import standard_true_false
 
 
 def read_data(data_path):
     with open(os.path.join(data_path, "dataset.pkl"), "rb") as f:
         data = pickle.load(f)
         Y = data["pheno"].iloc[:, 1:]
-        X_gpa = standard_true_false.fit_transform(data["X_gpa"])
-        X_snps = standard_true_false.fit_transform(data["X_snps"])
+        X_gpa = data["X_gpa"]
+        X_snps = data["X_snps"]
         X_genexp = StandardScaler().fit_transform(data["X_genexp"])
 
     return X_gpa, X_snps, X_genexp, Y
