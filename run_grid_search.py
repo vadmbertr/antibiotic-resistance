@@ -103,7 +103,7 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
                            ("", [KernelPCA(random_state=seed), ],
                             [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
                              ("n_components", [64, 128, 256], [])]),
-                           ("", [MultipleTesting(), ], ["alpha", (.01, .05, .1)])]
+                           ("", [MultipleTesting(), ], [("alpha", [.01, .05, .1], [])])]
     stab_sel_trans = _get_stab_sel_trans(stab_sel_path)
     if stab_sel_trans is not None:
         dim_red_grid_params.append(("", [stab_sel_trans, ], [("threshold", np.linspace(.6, .9, 4), [])]))
