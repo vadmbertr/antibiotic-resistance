@@ -93,7 +93,7 @@ def _merge_grids(grids):
     return merged_grid
 
 
-def build_hp_grid(pipe, seed, n_jobs, stab_sel_path, mul_test_path):
+def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
     sel_ind_grid_roots = ["sel_ind__gpa", "sel_ind__snps", "sel_ind__genexp"]
     sel_ind_grid_params = [("", ["drop", "passthrough"], [])]
     sel_ind_grid = _create_grid(sel_ind_grid_roots, sel_ind_grid_params)
@@ -134,7 +134,7 @@ def save_cv_results(cv_grid, antibiotic, save_path):
     pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(save_path, "cv_results__{}.csv".format(antibiotic)))
 
 
-def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path, mul_test_path, save_path):
+def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path, save_path):
     y = Y[antibiotic].to_numpy()
 
     # there is no missing value in the regressors but there are in the target
@@ -146,8 +146,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path,
 
     pipe = build_pipeline(X_gpa, X_snps, X_genexp)
     cv_grid = build_hp_grid(pipe, seed, n_jobs,
-                            os.path.join(stab_sel_path, "stability_scores__{}.pkl".format(antibiotic)),
-                            os.path.join(mul_test_path, "selected_regressors__{}.pkl".format(antibiotic)))
+                            os.path.join(stab_sel_path, "stability_scores__{}.pkl".format(antibiotic)))
 
     X = np.concatenate([X_gpa, X_snps, X_genexp], axis=1)
     cv_grid = cv_grid.fit(X, y)
@@ -159,7 +158,6 @@ def main(data_path, seed, n_jobs):
     np.random.seed(seed)
     n_jobs = min(n_jobs, joblib.cpu_count() - 1)
     stab_sel_path = os.path.join(data_path, "results/stab_sel")
-    mul_test_path = os.path.join(data_path, "results/mul_test")
     save_path = os.path.join(data_path, "results/grid_search")
 
     if not os.path.exists(save_path):
@@ -172,8 +170,7 @@ def main(data_path, seed, n_jobs):
         print("Fitting {}".format(antibiotic))
 
         try:
-            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, seed, n_jobs, stab_sel_path,
-                    mul_test_path, save_path)
+            run_one(X_gpa.copy(), X_snps.copy(), X_genexp.copy(), Y, antibiotic, seed, n_jobs, stab_sel_path, save_path)
         except:
             print("FITTING FAILED FOR {}".format(antibiotic))
             print(traceback.format_exc())
