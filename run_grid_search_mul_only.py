@@ -86,7 +86,7 @@ def build_hp_grid(pipe, seed, n_jobs):
     sel_ind_grid = _create_grid(sel_ind_grid_roots, sel_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
-    dim_red_grid_params = [("", [MultipleTesting(), ], [("alpha", [.01, .05, .1])])]
+    dim_red_grid_params = [("", [MultipleTesting(), ], [("alpha", [.01, .05, .1], [])])]
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
     clf_grid_roots = ["clf"]
