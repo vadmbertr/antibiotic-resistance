@@ -1,0 +1,12 @@
+\contentsline {section}{\numberline {1}L'antibiorésistance}{2}{section.1}%
+\contentsline {section}{\numberline {2}Exploration des données}{2}{section.2}%
+\contentsline {section}{\numberline {3}Approche pour la prédiction}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Pré-traitements}{3}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Réduction de la dimensionnalité}{4}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}ACP (à Noyau)}{4}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Stability selection}{5}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}Tests multiples}{5}{subsubsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.3}Classifieurs considérés}{5}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Mise en oeuvre}{5}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Résultats}{5}{section.4}%
+\contentsline {section}{\numberline {5}Perspectives}{5}{section.5}%

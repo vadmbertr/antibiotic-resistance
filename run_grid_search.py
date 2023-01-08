@@ -131,7 +131,8 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
 
 
 def save_cv_results(cv_grid, antibiotic, save_path):
-    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(save_path, "cv_results__{}.csv".format(antibiotic)))
+    pd.DataFrame(cv_grid.cv_results_).to_csv(os.path.join(save_path, "cv_results__{}.csv".format(antibiotic)),
+                                             index=False)
 
 
 def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, stab_sel_path, save_path):
