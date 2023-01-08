@@ -97,8 +97,8 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, grid_search_pa
     cv_scores = np.zeros(n_splits)
     for (i, (train_idx, test_idx)) in zip(np.arange(1, n_splits), cv.split(X, y)):
         pipe.fit(X[train_idx], y[train_idx])
-        y_proba = pipe.predict_proba(X[test_idx])
-        y_proba_all[test_idx] = y_proba[:, 1]
+        y_proba = pipe.predict_proba(X[test_idx])[:, 1]
+        y_proba_all[test_idx] = y_proba
         cv_scores[i] = balanced_accuracy_score(y[test_idx], (y_proba >= .5).astype(int))
 
     save_cv_pred(y_proba_all, antibiotic, save_path)
