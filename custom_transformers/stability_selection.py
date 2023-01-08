@@ -34,7 +34,7 @@ def _get_support(estimator, reg_param_name, reg_value, X, y):
 
 class StabilitySelection(TransformerMixin, BaseEstimator):
     def __init__(self, estimator=LogisticRegression(penalty="l1", class_weight="balanced", solver="liblinear"),
-                 reg_param_name="C", reg_grid=list(np.logspace(-2, 4, 25)),
+                 reg_param_name="C", reg_grid=list(np.logspace(-2, 4, 10)),
                  n_bootstraps=100, bootstrap_prop=.5, threshold=.6, random_state=15, n_jobs=1,
                  stability_scores=None):
         self.estimator = estimator
@@ -97,11 +97,10 @@ class StabilitySelection(TransformerMixin, BaseEstimator):
         return self.transform(X, threshold=threshold)
 
     # Return the stability path figure
-    def plot_path(self, threshold_highlight=None, xscale="log", **kwargs):
+    def plot_path(self, xscale="log", **kwargs):
         check_is_fitted(self)
 
-        threshold = self.threshold if threshold_highlight is None else threshold_highlight
-        paths_to_highlight = self.get_support(threshold=threshold)
+        paths_to_highlight = self.get_support()
 
         fig, ax = plt.subplots(1, 1, **kwargs)
         if not paths_to_highlight.all():
@@ -110,11 +109,8 @@ class StabilitySelection(TransformerMixin, BaseEstimator):
         if paths_to_highlight.any():
             ax.plot(self.reg_grid, self.stability_scores[paths_to_highlight].T, 'r-', linewidth=0.5)
 
-        if threshold is not None:
-            ax.plot(self.reg_grid, threshold * np.ones_like(self.reg_grid), 'b--', linewidth=0.5)
-
-        ax.set_ylabel("Stability score")
-        ax.set_xlabel("Regularization")
+        ax.set_ylabel("Stabilité")
+        ax.set_xlabel("Régularisation")
         ax.set_xscale(xscale)
 
         fig.tight_layout()
