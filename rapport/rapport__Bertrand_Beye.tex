@@ -116,7 +116,7 @@
   Comme expliqué dans la section~\hyperref[exploration-donnees]{\S2}, nous avons fait le choix de supprimer les données manquantes.
   Cette suppression est faite de manière \say{intelligente} en ce sens où les bactéries dont la résistance est absente sont éliminées uniquement pour les antibiotiques concernés et demeurent disponible pour les autres antibiotiques.
 
-  Nous nous sommes ensuite contentés de centrer/réduire les expressions génétiques de la matrice \textit{X\_genexp} grâce au transformateur \textit{\textbf{StandardScaler}} de \textit{scikit-learn}.
+  Nous nous sommes ensuite contentés de centrer/réduire les expressions génétiques de la matrice \textit{X\_genexp} grâce au transformateur \textbf{StandardScaler} de \textit{scikit-learn}.
 
   S'est ensuite posée la question de la mutualisation des informations contenues dans les 3 matrices de classifieurs.
   En traçant les cartes de chaleur de ces matrices, nous avons aperçu que toutes ne sont pas nécessairement pertinentes pour tous les antibiotiques.
@@ -134,32 +134,77 @@
 \subsubsection{ACP (à Noyau)}\label{acp-noyau}}
 
   L'Analyse en Composantes Principales (ACP) est une approche bien connue permettant de représenter les observations dans un sous-espace vectoriel dont les composantes sont décorrélées.
+  Les composantes sont ordonnées en ordre décroissant de variance expliquée, de sorte qu'il est simple d'utiliser le nombre de composantes conservées pour représenter les données comme un hyper-paramètre permettant de plus ou moins réduire la dimensionnalité tout en maximisant le pourcentage de variance expliquée pour un nombre de composantes fixé.
 
   \begin{figure}[H]
     \centering
     \begin{subfigure}[b]{0.49\textwidth}
       \centering
       \includegraphics[width=\textwidth]{pca_var}
-      \caption{Variance cumulée exprimée en pourcentage}
+      \caption{Variance cumulée exprimée en pourcentage.}
       \label{fig:pca_var}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.49\textwidth}
       \centering
       \includegraphics[width=\textwidth]{pca}
-      \caption{Nuage de points selon les 2 premières dimensions}
+      \caption{Nuage de points selon les 2 premières dimensions.}
       \label{fig:pca_proj}
     \end{subfigure}
     \hfill
-    \caption{Représentations de l'ACP avec un noyau linéaire}
+    \caption{Représentations de l'ACP avec un noyau linéaire.}
     \label{fig:pca}
   \end{figure}
+
+  Nous avons appliqué l'ACP à notre jeu de données, en considérant tous les arrangements possibles d'utilisation des matrices de descripteurs et comme nous pouvons le voir sur la figure~\ref{fig:pca}, les résultats sont mitigés.
+  D'un côté, la figure~\ref{fig:pca_var} ne montre pas de point d'inflexion franc dans la courbe de variance cumulée, ce qui suggère qu'il n'existe pas de point au delà duquel les composantes sont peu importantes.
+  En revanche, nous pouvons voir sur la figure~\ref{fig:pca_proj} que la projection dans les deux premières dimensions de l'ACP (en ayant agrégé l'ensemble des matrices de régresseurs) de nos données permet de partiellement séparer les bactéries sensibles et résistantes, ce qui est encourageant en vue de l'étape de classification.
+
+  Par ailleurs, grâce au \textit{kernel-trick} il est possible de mettre en place une variante de l'ACP permettant une réduction de dimensions non linéaire en utilisant divers noyaux.
+  Via \textit{scikit-learn}, il suffit alors d'utiliser la classe \textbf{KernelPCA}.
 
 \hypertarget{stability-selection}{%
 \subsubsection{Stability selection}\label{stability-selection}}
 
+  La \textit{stability selection} est une approche permettant de corriger l'instabilité de la sélection de variables de l'estimateur Lasso en présence de covariables corrélées.
+  Pour ce faire, des estimateurs pénalisés avec la norme $L1$ sont ajustés sur de multiples ré-échantillonnages du jeu de données.
+  Chaque estimateur produit un chemin de régularisation le long duquel les poids associés aux covariables les moins importantes pour la tâche de régression ou de classification sont progressivement annulés quand la pénalisation augmente.
+  À partir de ces chemins de régularisation, l'estimateur de \textit{stability selection} construit un chemin de stabilité représentant la fréquence de sélection des covariables parmi l'ensemble des estimateurs Lasso.
+  Au moyen d'un seuil de stabilité, il est donc possible de sélectionner les variables alors considérées comme \textit{stables}.
+  Cette procédure est généralement utilisée comme un estimateur plutôt que comme une méthode de réduction de dimensions, mais nous avons souhaité essayer de l'utiliser comme telle.
+
+  La \textit{stability selection} n'est pas proposée par \textit{scikit-learn} (uniquement le \textit{bootsrap Lasso}), nous avons donc implémenté notre propre estimateur héritant des classes de bases \textbf{TransformerMixin} et \textbf{BaseEstimator} afin de pouvoir l'utiliser ensuite dans un \textbf{Pipeline}.
+  La figure~\ref{fig:stab_path} illustre le chemin de régularité obtenu en utilisant l'ensemble des matrices de régresseurs pour construire la matrice de covariables et avec un seuil de régularité de $0.6$.
+  Un tel seuil conduit à conserver environ $1250$ covariables sur plus de $96000$ au départ.
+
+  \begin{figure}[H]
+    \centering
+    \includegraphics[height=6cm,width=\textwidth,keepaspectratio]{stab_sel}
+    \caption{Illustration du chemin de stabilité obtenu par \textit{stability selection}.}
+    \label{fig:stab_path}
+  \end{figure}
+
+  L'un des inconvénients principal de la \textit{stability selection} est le temps d'ajustement très important en raison du nombre de ré-échantillonnages à effectuer (100 dans notre cas) et de la longueur du chemin de régularisation (fixé à 25).
+  Afin de palier ce problème, nous avons effectué les sélections de variables en amont pour chacun des arrangements et des antibiotiques plutôt que de répéter les sélections pendant l'ajustement des hyper-paramètres.
+  Cela à pour effet de rendre les scores de validation croisée obtenus pendant la procédure de recherche des hyper-paramètres non généralisables, car la sélection de variables est faite sur l'ensemble du jeu de données et pas sur les sous-ensembles de validation croisée.
+  Une fois le modèle le plus performant déterminé, nous avons donc répété l'évaluation par validation-croisée sans fixer au préalable les variables stables pour obtenir des scores extrapolables à de nouvelles données.
+
 \hypertarget{tests-multiples}{%
 \subsubsection{Tests multiples}\label{tests-multiples}}
+
+  Une autre manière de réaliser la réduction de dimensionnalité pourrait être de considérer que de nombreuses variables sont inutiles pour la prédiction, car leurs distributions entre les bactéries susceptibles ou résistantes est la même.
+
+  Nous pouvons donc procéder à une nouvelle sélection de variables s'appuyant cette fois-ci sur deux tests statistiques : le Z-test pour les matrices \textit{X\_gpa} et \textit{X\_snps} et le T-test pour la matrice \textit{X\_genexp}.
+  Nous avons utilisé la librairie \textit{statsmodels} qui propose l'implémentation de ces tests.
+  En raison du grand nombre de tests réalisés de manière indépendante, il convient d'ajuster les $pvaleurs$.
+  Nous avons choisi d'utiliser la procédure de Benjamini-Hochberg permettant de contrôler le FDR (\textit{False Discovery Rate}), plutôt que des procédures contrôlant le FWER (\textit{Family-Wise Error Rate}) afin de découvrir plus de variables statistiquement différentes selon les deux modalités de résistance.
+  Nous nous sommes tourné pour cela vers la librairie \textit{MultiPy} qui permet de choisir parmi de nombreuses méthodes d'ajustement.
+
+  Comme le montre la table~\ref{tab:mul_test}, cette approche permet de réduire très fortement le nombre de covariables utilisées par le classifieur, et le niveau $\alpha$ peut-être employé comme un hyper-paramètre permettant de jouer sur le nombre de variables rejetées.
+
+  \input{tables/mul_test.tex}
+
+  Le désavantage que nous voyons à cette approche par tests multiples est que les variables sélectionnées sont potentiellement corrélées.
 
 \hypertarget{classifieurs-consideres}{%
 \subsection{Classifieurs considérés}\label{classifieurs-consideres}}
