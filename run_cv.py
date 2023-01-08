@@ -7,7 +7,9 @@ import traceback
 import joblib
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import KernelPCA
 from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.model_selection import StratifiedKFold
@@ -15,6 +17,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
+from custom_transformers.multiple_testing import MultipleTesting
 from custom_transformers.stability_selection import StabilitySelectionTransformer
 
 
