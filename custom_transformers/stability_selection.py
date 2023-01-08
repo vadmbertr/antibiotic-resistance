@@ -53,7 +53,7 @@ class StabilitySelection(TransformerMixin, BaseEstimator):
     def __sklearn_is_fitted__(self):
         return self.stability_scores is not None
 
-    def fit(self, X, y, threshold=None):
+    def fit(self, X, y):
         X, y = check_X_y(X, y, accept_sparse="csr")
 
         if not self.__sklearn_is_fitted__():
@@ -64,9 +64,6 @@ class StabilitySelection(TransformerMixin, BaseEstimator):
             ) for _ in range(self.n_bootstraps))
 
             self.stability_scores = np.array(stability_scores).mean(axis=0).transpose()
-
-        # Fit a final estimator using the stable features only
-        self.estimator = self.estimator.fit(self.transform(X, threshold=threshold), y)
 
         return self
 
@@ -98,17 +95,6 @@ class StabilitySelection(TransformerMixin, BaseEstimator):
     def fit_transform(self, X, y=None, threshold=None):
         self.fit(X, y)
         return self.transform(X, threshold=threshold)
-
-    # Return the final estimator predictions using only the stable features
-    def predict(self, X, threshold=None):
-        X = check_array(X, accept_sparse="csr")
-
-        return self.estimator.predict(self.transform(X, threshold=threshold))
-
-    def score(self, X, y, sample_weight=None, threshold=None):
-        X, y = check_X_y(X, y, accept_sparse="csr")
-
-        return self.estimator.score(self.transform(X, threshold=threshold), y, sample_weight=sample_weight)
 
     # Return the stability path figure
     def plot_path(self, threshold_highlight=None, xscale="log", **kwargs):
