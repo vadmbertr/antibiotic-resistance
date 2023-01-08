@@ -95,7 +95,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, grid_search_pa
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     y_proba_all = np.zeros(y.shape)
     cv_scores = np.zeros(n_splits)
-    for (i, (train_idx, test_idx)) in zip(np.arange(1, n_splits), cv.split(X, y)):
+    for (i, (train_idx, test_idx)) in zip(np.arange(0, n_splits), cv.split(X, y)):
         pipe.fit(X[train_idx], y[train_idx])
         try:
             y_proba = pipe.predict_proba(X[test_idx])[:, 1]
