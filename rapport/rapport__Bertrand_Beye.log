@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.12.22)  8 JAN 2023 17:25
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.12.22)  8 JAN 2023 23:41
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -664,26 +664,32 @@ File: images//stab_sel.png Graphic file (type png)
 <use images//stab_sel.png>
 Package pdftex.def Info: images//stab_sel.png  used on input line 182.
 (pdftex.def)             Requested size: 231.26308pt x 170.72044pt.
- [5 </home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/images//stab_sel.png>] (/home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/tables/mul_test.tex) [6] (/home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/rapport__Bertrand_Beye.aux)
+ [5 </home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/images//stab_sel.png>] (/home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/tables/mul_test.tex)
+<images//pipe.png, id=127, 856.19875pt x 672.5125pt>
+File: images//pipe.png Graphic file (type png)
+<use images//pipe.png>
+Package pdftex.def Info: images//pipe.png  used on input line 223.
+(pdftex.def)             Requested size: 217.34142pt x 170.71365pt.
+ [6] (/home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/tables/grid_params.tex) [7 </home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/images//pipe.png>] (/home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/tables/res_cv.tex) [8] (/home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/rapport__Bertrand_Beye.aux)
 Package rerunfilecheck Info: File `rapport__Bertrand_Beye.out' has not changed.
-(rerunfilecheck)             Checksum: F629480097FB74BBAD8F826A6363C0EE;1828.
+(rerunfilecheck)             Checksum: 07AD955FABAE0052F1258857FBF65FED;1826.
 Package logreq Info: Writing requests to 'rapport__Bertrand_Beye.run.xml'.
 \openout1 = `rapport__Bertrand_Beye.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 18704 strings out of 478053
- 330176 string characters out of 5840783
+ 18733 strings out of 478053
+ 330905 string characters out of 5840783
  1861793 words of memory out of 5000000
- 38585 multiletter control sequences out of 15000+600000
+ 38603 multiletter control sequences out of 15000+600000
  524033 words of font info for 58 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  60i,10n,68p,695b,801s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1000.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1095.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1095.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1095.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1095.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1440.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1200.600pk> </home/vadim/.TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1728.600pk></home/vadim/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></home/vadim/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on /home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/rapport__Bertrand_Beye.pdf (6 pages, 1442335 bytes).
+Output written on /home/vadim/Documents/Master/M2/app-stat/TP/projet/rapport/rapport__Bertrand_Beye.pdf (8 pages, 1504399 bytes).
 PDF statistics:
- 486 PDF objects out of 1000 (max. 8388607)
- 164 compressed objects within 2 object streams
- 37 named destinations out of 1000 (max. 500000)
- 117 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 520 PDF objects out of 1000 (max. 8388607)
+ 178 compressed objects within 2 object streams
+ 42 named destinations out of 1000 (max. 500000)
+ 122 words of extra memory for PDF output out of 10000 (max. 10000000)
 

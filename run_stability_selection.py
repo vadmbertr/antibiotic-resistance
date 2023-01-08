@@ -8,7 +8,7 @@ import joblib
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-from custom_transformers.stability_selection import StabilitySelection
+from custom_transformers.stability_selection import StabilitySelectionTransformer
 
 
 def read_data(data_path):
@@ -51,7 +51,7 @@ def run_one(X_gpa, X_snps, X_genexp, Y, antibiotic, seed, n_jobs, save_path):
 
         X = np.concatenate(X, axis=1)
 
-        stab_sel = StabilitySelection(random_state=seed, n_jobs=n_jobs)
+        stab_sel = StabilitySelectionTransformer(random_state=seed, n_jobs=n_jobs)
         stab_sel = stab_sel.fit(X, y)
         stability_scores[X.shape[1]] = stab_sel.stability_scores
 

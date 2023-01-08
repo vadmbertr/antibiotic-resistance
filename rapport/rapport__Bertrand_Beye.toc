@@ -7,6 +7,6 @@
 \contentsline {subsubsection}{\numberline {3.2.2}Stability selection}{5}{subsubsection.3.2.2}%
 \contentsline {subsubsection}{\numberline {3.2.3}Tests multiples}{6}{subsubsection.3.2.3}%
 \contentsline {subsection}{\numberline {3.3}Classifieurs considérés}{6}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Mise en oeuvre}{6}{subsection.3.4}%
-\contentsline {section}{\numberline {4}Résultats}{6}{section.4}%
-\contentsline {section}{\numberline {5}Perspectives}{6}{section.5}%
+\contentsline {subsection}{\numberline {3.4}Mise en œuvre}{6}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Résultats}{8}{section.4}%
+\contentsline {section}{\numberline {5}Perspectives}{8}{section.5}%

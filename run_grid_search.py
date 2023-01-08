@@ -19,7 +19,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
 from custom_transformers.multiple_testing import MultipleTesting
-from custom_transformers.stability_selection import StabilitySelection
+from custom_transformers.stability_selection import StabilitySelectionTransformer
 
 
 def read_data(data_path):
@@ -98,7 +98,7 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
                            ("", [KernelPCA(random_state=seed), ],
                             [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
                              ("n_components", [64, 128, 256], [])]),
-                           ("", [StabilitySelection(), ], [("threshold", np.linspace(.6, .9, 4), [])]),
+                           ("", [StabilitySelectionTransformer(), ], [("threshold", np.linspace(.6, .9, 4), [])]),
                            ("", [MultipleTesting(), ], [("alpha", [.01, .05, .1], [])])]
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 

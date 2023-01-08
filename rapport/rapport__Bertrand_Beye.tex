@@ -126,7 +126,7 @@
 \subsection{Réduction de la dimensionnalité}\label{reduction-dimension}}
 
   Nous avons vu que nos matrices de régresseurs contiennent beaucoup de covariables, jusqu'à 94267 lorsque nous les concaténons entres-elles, relativement aux nombres d'observations dont nous disposons.
-  Il est donc impératif de réduire cette dimensionnalité.
+  Il est donc impératif d'envisager de réduire cette dimensionnalité.
   Cela peut se faire en amont de la tâche de classification, ou alors de manière intégrée en incluant une pénalisation sur les poids du modèle associés aux regresseurs.
   Nous avons considéré les deux approches et nous détaillerons dans cette partie les 3 méthodes que nous avons employées en amont.
 
@@ -171,7 +171,7 @@
   Chaque estimateur produit un chemin de régularisation le long duquel les poids associés aux covariables les moins importantes pour la tâche de régression ou de classification sont progressivement annulés quand la pénalisation augmente.
   À partir de ces chemins de régularisation, l'estimateur de \textit{stability selection} construit un chemin de stabilité représentant la fréquence de sélection des covariables parmi l'ensemble des estimateurs Lasso.
   Au moyen d'un seuil de stabilité, il est donc possible de sélectionner les variables alors considérées comme \textit{stables}.
-  Cette procédure est généralement utilisée comme un estimateur plutôt que comme une méthode de réduction de dimensions, mais nous avons souhaité essayer de l'utiliser comme telle.
+  Cette procédure est généralement utilisée comme un estimateur plutôt que comme une méthode de réduction de dimensions, mais nous avons souhaité la tester ainsi (étant donné que nous avons intégré le Lasso aux classifieurs considérés par la suite, l'approche originelle est cependant également employée).
 
   La \textit{stability selection} n'est pas proposée par \textit{scikit-learn} (uniquement le \textit{bootsrap Lasso}), nous avons donc implémenté notre propre estimateur héritant des classes de bases \textbf{TransformerMixin} et \textbf{BaseEstimator} afin de pouvoir l'utiliser ensuite dans un \textbf{Pipeline}.
   La figure~\ref{fig:stab_path} illustre le chemin de régularité obtenu en utilisant l'ensemble des matrices de régresseurs pour construire la matrice de covariables et avec un seuil de régularité de $0.6$.
@@ -185,20 +185,18 @@
   \end{figure}
 
   L'un des inconvénients principal de la \textit{stability selection} est le temps d'ajustement très important en raison du nombre de ré-échantillonnages à effectuer (100 dans notre cas) et de la longueur du chemin de régularisation (fixé à 25).
-  Afin de palier ce problème, nous avons effectué les sélections de variables en amont pour chacun des arrangements et des antibiotiques plutôt que de répéter les sélections pendant l'ajustement des hyper-paramètres.
-  Cela à pour effet de rendre les scores de validation croisée obtenus pendant la procédure de recherche des hyper-paramètres non généralisables, car la sélection de variables est faite sur l'ensemble du jeu de données et pas sur les sous-ensembles de validation croisée.
-  Une fois le modèle le plus performant déterminé, nous avons donc répété l'évaluation par validation-croisée sans fixer au préalable les variables stables pour obtenir des scores extrapolables à de nouvelles données.
 
 \hypertarget{tests-multiples}{%
 \subsubsection{Tests multiples}\label{tests-multiples}}
 
   Une autre manière de réaliser la réduction de dimensionnalité pourrait être de considérer que de nombreuses variables sont inutiles pour la prédiction, car leurs distributions entre les bactéries susceptibles ou résistantes est la même.
 
-  Nous pouvons donc procéder à une nouvelle sélection de variables s'appuyant cette fois-ci sur deux tests statistiques : le Z-test pour les matrices \textit{X\_gpa} et \textit{X\_snps} et le T-test pour la matrice \textit{X\_genexp}.
+  Nous pouvons ainsi procéder à une nouvelle sélection de variables s'appuyant cette fois-ci sur deux tests statistiques : le Z-test pour les matrices \textit{X\_gpa} et \textit{X\_snps} et le T-test pour la matrice \textit{X\_genexp}.
   Nous avons utilisé la librairie \textit{statsmodels} qui propose l'implémentation de ces tests.
   En raison du grand nombre de tests réalisés de manière indépendante, il convient d'ajuster les $pvaleurs$.
   Nous avons choisi d'utiliser la procédure de Benjamini-Hochberg permettant de contrôler le FDR (\textit{False Discovery Rate}), plutôt que des procédures contrôlant le FWER (\textit{Family-Wise Error Rate}) afin de découvrir plus de variables statistiquement différentes selon les deux modalités de résistance.
   Nous nous sommes tourné pour cela vers la librairie \textit{MultiPy} qui permet de choisir parmi de nombreuses méthodes d'ajustement.
+  L'ensemble de la procédure a été encapsulée dans une classe permettant de l'utiliser comme un transformateur dans un \textbf{Pipeline}.
 
   Comme le montre la table~\ref{tab:mul_test}, cette approche permet de réduire très fortement le nombre de covariables utilisées par le classifieur, et le niveau $\alpha$ peut-être employé comme un hyper-paramètre permettant de jouer sur le nombre de variables rejetées.
 
@@ -209,11 +207,52 @@
 \hypertarget{classifieurs-consideres}{%
 \subsection{Classifieurs considérés}\label{classifieurs-consideres}}
 
+  Nous avons considéré 3 grands types de classifieurs différents : régression logistique, machines à support vectoriel (SVM) et forêts aléatoires.
+  Nous avons également utilisé les variantes AdaBoost et Gradient Boosting des forêts aléatoires, ainsi que l'entrainement par descente de gradient pour la régression logistique et la SVM linéaire.
+
+  Dans l'univers \textit{scikit-learn} cela revient à utiliser les classes \textbf{LogisticRegression}, \textbf{SVC}, \textbf{RandomForestClassifier}, \textbf{AdaBoostClassifier}, \textbf{GradientBoostingClassifier} et \textbf{SGDClassifier}.
+  Nous verrons dans la section suivante quels hyper-paramètres nous avons fait varier pour ces différents estimateurs, mais pour l'ensemble d'entre eux nous avons spécifié \textit{class\_weight="balanced"} afin de tenir compte du déséquilibre entre les nombres de bactéries sensibles et résistantes.
+
 \hypertarget{mise-oeuvre}{%
-\subsection{Mise en oeuvre}\label{mise-oeuvre}}
+\subsection{Mise en œuvre}\label{mise-oeuvre}}
+
+  Comme évoqué précédemment, nous nous sommes reposés sur la librairie \textit{scikit-learn} pour la mise en œuvre de notre étude de prédiction.
+
+  \begin{figure}[H]
+    \centering
+    \includegraphics[height=6cm,width=\textwidth,keepaspectratio]{pipe}
+    \caption{Représentation du \textbf{Pipeline} construit.}
+    \label{fig:pipe}
+  \end{figure}
+
+  La figure~\ref{fig:pipe} illustre le \textbf{Pipeline} que nous avons utilisé.
+  Le premier niveau, \textit{trans\_ind}, applique les pré-traitements de manière distincte pour les différentes matrices de régresseurs.
+  Le niveau \textit{sel\_ind} permet de générer les différents arrangements possibles pour l'utilisation des matrices de régresseurs.
+  Le troisième niveau correspond à celui de la réduction de dimension.
+  Et enfin, le dernier estimateur est le classifieur.
+
+  Ce \textbf{Pipeline} nous permet de \say{facilement} faire varier les différents estimateurs et leurs hyper-paramètres en utilisant la classe \textbf{GridSearchCV} pour trouver la combinaison la plus performante.
+  \say{Facilement} car construire une grille d'hyper-paramètres avec notre structure n'est pas si évident que cela, et car le nombre de combinaisons d'hyper-paramètres augmente très vite.
+  Nous avons indiqué à l'object \textbf{GridSearchCV} que la métrique à utiliser pour mesurer la performance est la \textit{balanced accuracy} afin de tenir compte du déséquilibre dans les classes à prédire.
+
+  \input{tables/grid_params.tex}
+
+  La table~\ref{tab:grid_params} donne à voir l'ensemble des hyper-paramètres considérés dans la grille de recherche.
+  Au total, cela représente $7200$ combinaisons d'estimateurs et d'hyper-paramètres par antibiotique.
+  Afin de limiter le temps de recherche des hyper-paramètres, en plus du parallélisme, nous avons utilisé la librairie \textit{scikit-learn-intelex} qui propose des implémentations plus rapides de certains estimateurs pour les processeurs Intel ;
+  et nous nous sommes également servi de l'argument \textit{memory} de \textbf{GridSearchCV} qui permet de ne pas ré-ajuster les estimateurs lorsque leurs paramètres d'entrée ne changent pas.
+  Malgré cela, la recherche des hyper-paramètres a nécessité plusieurs heures.
 
 \hypertarget{resultats}{%
 \section{Résultats}\label{resultats}}
+
+  Dans un premier temps nous nous sommes intéressés à la moyenne et à la déviation standard des scores obtenus par validation croisée pendant la procédure de recherche des hyper-paramètres.
+  Nous avons fait figurer sur la table~\ref{tab:res_cv} les meilleurs résultats selon ces critères pour chacun des antibiotiques.
+  La table permet également de voir quelles matrices de régresseurs ont alors été utilisées, ainsi que les estimateurs de réduction de dimension et de classification retenus.
+
+  \input{tables/res_cv.tex}
+
+
 
 \hypertarget{perspectives}{%
 \section{Perspectives}\label{perspectives}}

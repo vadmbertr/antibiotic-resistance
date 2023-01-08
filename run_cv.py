@@ -15,7 +15,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from custom_transformers.stability_selection import StabilitySelection
+from custom_transformers.stability_selection import StabilitySelectionTransformer
 
 
 def read_data(data_path):
@@ -57,7 +57,7 @@ def _custom_parser(params, n_jobs):
     for chunk in chunks:
         if "StabilitySelectionTransformer" in chunk:
             key = "dim_red"
-            value = StabilitySelection(n_jobs=n_jobs)
+            value = StabilitySelectionTransformer(n_jobs=n_jobs)
         else:
             key, value = chunk.split(': ')
             key = key.replace("'", "")

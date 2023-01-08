@@ -9,6 +9,7 @@ import joblib
 from joblib import Memory
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import KernelPCA
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, SGDClassifier
@@ -16,8 +17,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-
-from custom_transformers.stability_selection import StabilitySelection
 
 
 def read_data(data_path):
@@ -92,7 +91,9 @@ def build_hp_grid(pipe, seed, n_jobs, stab_sel_path):
     sel_ind_grid = _create_grid(sel_ind_grid_roots, sel_ind_grid_params)
 
     dim_red_grid_roots = ["dim_red"]
-    dim_red_grid_params = [("", [StabilitySelection(), ], [("threshold", np.linspace(.6, .9, 4), [])])]
+    dim_red_grid_params = [("", [KernelPCA(random_state=seed), ],
+                            [("kernel", ["linear", "poly", "rbf", "sigmoid"], []),
+                             ("n_components", [20, 40, 80], [])])]
     dim_red_grid = _create_grid(dim_red_grid_roots, dim_red_grid_params)
 
     clf_grid_roots = ["clf"]
@@ -146,7 +147,7 @@ def main(data_path, seed, n_jobs):
     n_jobs = min(n_jobs, joblib.cpu_count() - 1)
     stab_sel_path = os.path.join(data_path, "results/stab_sel")
     cache_path = os.path.join(data_path, ".cache")
-    save_path = os.path.join(data_path, "results/grid_search")
+    save_path = os.path.join(data_path, "results/grid_search_pca")
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)

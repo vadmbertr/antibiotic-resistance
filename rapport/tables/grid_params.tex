@@ -1,0 +1,20 @@
+\begin{table}[H]
+\centering
+\caption{Hyper-paramètres envisagés dans la grille de recherche.}
+\label{tab:grid_params}
+\resizebox{\textwidth}{!}{\begin{tabular}{lr}
+\toprule
+{} &  params \\
+\midrule
+\textbf{PCA}                        &       kernel: [linear,poly,rbf,sigmoid], n\_components: [64,128,256]                     \\
+\textbf{StabilitySelection}         &       threshold: np.linspace(0.6,0.9,4)                                                  \\
+\textbf{MultipleTesting}            &       alpha: [0.01,0.05,.1]                                                              \\
+\textbf{LogisticRegression}         &       C: np.logspace(-1,1,3)                                                             \\
+\textbf{SVC}                        &       C: np.logspace(-1,1,3), kernel: [linear,poly,rbf,sigmoid]                          \\
+\textbf{RandomForestClassier}       &       n\_estimators: [100,300,500], max\_depth: [None,10,100], max\_features: [sqrt,log2]\\
+\textbf{AdaBoostClassifier}         &       learning\_rate: np.logspace(-2,0,3)                                                \\
+\textbf{GradientBoostingClassifier} &       learning\_rate: np.logspace(-2,0,3)                                                \\
+\textbf{SGDClassifier}              &       loss: [hinge,log\_loss], alpha: np.logspace(-5,-3,3)                               \\
+\bottomrule
+\end{tabular}}
+\end{table}

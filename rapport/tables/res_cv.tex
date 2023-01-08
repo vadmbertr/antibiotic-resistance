@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\caption{Meilleurs scores obtenus par validation croisée et architectures associées.}
+\label{tab:res_cv}
+\resizebox{\textwidth}{!}{\begin{tabular}{lrrlllll}
+\toprule
+{} & \multicolumn{2}{l}{Balanced accuracy} & \multicolumn{3}{l}{Présence} & \multicolumn{2}{l}{Estimateur} \\
+{} &           moyenne & déviation &      gpa &   snps & genexp &           réduction &             classifieur \\
+\midrule
+\textbf{Ceftazidim   } &              0.84 &      0.05 &     True &  False &   True &  StabilitySelection &      AdaBoostClassifier \\
+\textbf{Ciprofloxacin} &              0.89 &      0.03 &     True &   True &  False &  StabilitySelection &      AdaBoostClassifier \\
+\textbf{Colistin     } &              0.73 &      0.06 &     True &  False &   True &  StabilitySelection &                     SVC \\
+\textbf{Meropenem    } &              0.90 &      0.03 &     True &   True &   True &     MultipleTesting &      LogisticRegression \\
+\textbf{Tobramycin   } &              0.93 &      0.04 &     True &  False &   True &  StabilitySelection &  RandomForestClassifier \\
+\bottomrule
+\end{tabular}}
+\end{table}
