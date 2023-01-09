@@ -316,8 +316,7 @@
   De plus, afin de réduire ces temps d'ajustement, nous aurions peut-être pu utiliser la classe \textbf{HalvingGridSearchCV} permettant d'ajuster les hyper-paramètres en allouant peu de ressources au début de la recherche et en éliminant les combinaisons les plus mauvaises au fur et à mesure que plus de ressources sont allouées.
   Notre souci avec cette technique a été le fort déséquilibre dans les classes à prédire pour les premières itération de la recherche.
 
-  Par ailleurs, nous avons des doutes sur la grille d'hyper-paramètres choisie pour l'ACP car les combinaisons l'employant se trouvaient systématiquement assez loin des autres en terme de performance.
-  Peut-être aurait-il fallu élargir l'amplitude du nombre de composantes de l'ACP à conserver, mais encore une fois le temps d'ajustement des modèles nous a empêché de revenir sur notre choix initial.
+  Par ailleurs, nous n'avons posé la question du temps d'ajustement et du gain de performance engendré par l'utilisation de la \textit{stability selection} par rapport à celle des tests multiples.
 
   Enfin, nous avons décidé de ne pas utiliser de réseaux de neurones en raison du fort risque de sûr-apprentissage dû au faible nombre d'observations à notre disposition et du grand nombre d'hyper-paramètres à considérer avec ce types de modèles.
   De plus, le coût calculatoire s'en serait encore trouvé augmenté.
