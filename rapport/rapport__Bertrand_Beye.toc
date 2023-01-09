@@ -9,4 +9,4 @@
 \contentsline {subsection}{\numberline {3.3}Classifieurs considérés}{6}{subsection.3.3}%
 \contentsline {subsection}{\numberline {3.4}Mise en œuvre}{6}{subsection.3.4}%
 \contentsline {section}{\numberline {4}Résultats}{8}{section.4}%
-\contentsline {section}{\numberline {5}Perspectives}{8}{section.5}%
+\contentsline {section}{\numberline {5}Conclusion}{9}{section.5}%

@@ -256,7 +256,70 @@
   La Ceftazidim vient ensuite, puis la Ciprofloxacin et la Meropenem dont les performances de prédiction sans assez proches, tandis que la Tobramycin apparait comme l'antibiotique auquel la résistance est la plus prévisible.
   En parallèle des scores moyens, nous pouvons être relativement satisfait de la déviation standard de la \textit{balanced accuracy} qui est inférieure ou égale à $0.05$, exception faite de la Colistin.
 
-\hypertarget{perspectives}{%
-\section{Perspectives}\label{perspectives}}
+  Le choix de considérer la \textit{stability selection} et les tests multiples pour réduire la dimensionnalité semble aussi avoir été payant, étant donné qu'ils se retrouvent dans les estimateurs de réduction de dimensions des meilleures architectures, au contraire de l'ACP.
+
+  À la vue des indications de présence ou d'absence des matrices de régresseurs, \textit{X\_gpa} semble importante dans la prédiction de l'ensemble des résistances, \textit{X\_genexp} a été ignorée uniquement dans le cas de la Ciprofloxacin et \textit{X\_snps} serait celle la moins souvent utile car conservée deux fois seulement.
+  Pour approfondir ces observations nous avons observé le pourcentages de sélection des matrices de régresseurs parmi les 10 meilleures architectures pour chaque antibiotique.
+  Nous pouvons voir sur la table~\ref{tab:res_x} qu'il est confirmé que \textit{X\_snps} est bien nécessaire pour prédire la résistance à la Ciprofloxacin mais très peu utile pour les autres antibiotiques.
+  En revanche, l'importance prépondérante de \textit{X\_gpa} pour l'ensemble des antibiotiques est nuancée, notamment en comparaison avec celle de \textit{X\_genexp} qui est sélectionnée $100\%$ du temps 3 fois, contre 2 fois pour \textit{X\_gpa}.
+  Ainsi \textit{X\_genexp} semble absoluement indispensable pour la prédiction de la Tobramycin, la Colistin et la Ceftazidim ;
+  tandis que \textit{X\_gpa} le serait également pour la Tobramycin, et pour la Meropenem.
+
+  \input{tables/res_x.tex}
+
+  Pour tenter de comprendre un peu plus les forces et les faiblesses de nos modèles de prédictions, nous avons généré les matrices de confusion entre les classes attendues et celles prédites.
+  Dans la plupart des cas il n'est pas apparu de déséquilibre dans les fausses prédictions entre classe résistante et sensible, mis à part pour la Colistin et la Méropenem dont nous avons donc représenté les matrices sur la figure~\ref{fig:conf_mat}.
+  Il semble sur~\ref{fig:conf_mat_colis} que notre modèle a eu plus de difficultés à correctement classifier la susceptibilité à la Colistin que la résistance, ce qui peut-être préférable selon l'objectif visé.
+  A l'inverse,~\ref{fig:conf_mat_merop} montre que pour la Meropenem c'est la détection des bactéries résistantes qui a causé le plus de problème, mais dans des proportions moindres qu'avec la Colistin.
+  Dans les deux cas, cela peut s'expliquer par le fort déséquilibre entre bactéries sensibles et résistantes pour ces antibiotiques, mais ce déséquilibre était également présent pour la Tobramycin dont la matrice de confusion est équilibrée.
+
+  \begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{conf_mat_colis}
+      \caption{Pour la Colistin.}
+      \label{fig:conf_mat_colis}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{conf_mat_merop}
+      \caption{Pour la Meropenem.}
+      \label{fig:conf_mat_merop}
+    \end{subfigure}
+    \hfill
+    \caption{Matrices de confusion.}
+    \label{fig:conf_mat}
+  \end{figure}
+
+\hypertarget{conclusion}{%
+\section{Conclusion}\label{conclusion}}
+
+  Afin de prédire au mieux la résistance d'environ $400$ bactéries à $5$ antibiotiques différents à partir de $3$ matrices de régresseurs, nous avons développé un \textbf{Pipeline} doté de plusieurs couches permettant d'appliquer des pré-traitements distincts, de sélectionner ou non les matrices de régresseurs, de réduire la dimensionnalité des covariables utilisées par différentes approches et enfin d'appliquer plusieurs classifieurs.
+  Les meilleures combinaisons et leurs hyper-paramètres ont ensuite été ajustés par validation croisée afin de généraliser au mieux les résultats finaux, et en considérant comme critère la \textit{balanced accuracy} pour tenir compte du déséquilibre des classes à prédire.
+
+  Les scores obtenus par validation croisée ont montré que la Colistin est l'antibiotique pour lequel la prédiction à la résistance s'est avéré la plus compliquée, avec une \textit{balanced accuracy} moyenne de seulement $0.73$ et une déviation de $0.06$.
+  Nous considérons en revanche que la prédiction pour les autres antibiotiques est plutôt bonne, voir très bonne en ce qui concerne la Tobramycin.
+
+  Il est apparu que la prédiction de la résistance pour tous les antibiotiques ne nécessitaient pas les mêmes types d'informations sur les bactéries.
+  Ainsi, la présence ou l'absence de gènes s'est avérée capitale pour la Meropenem et la Tobramycin, tandis que ce sont les mutations génétiques qui ont été indispensables pour la Ciprofloxacin.
+  Les informations sur l'état cellulaire \say{courant} des bactéries a-t-elle été absoluement nécessaire pour la Ceftazidim, et surtout la Colistin, et s'est trouvée être un excellent complément pour la Tobramycin. \\
+
+  Pour finir, nous avons identifié quelques pistes intéressantes et des questionnements sur les résultats obtenus.
+
+  Tout d'abord, il aurait peut-être été bon de se pencher sur l'impact sur la dimensionnalité des différentes méthodes de réduction de dimension et sur le lien éventuel avec les performances en classification.
+
+  Nous aurions aussi aimé inclure un estimateur réalisant un vote entre les prédictions de plusieurs classifieurs mais nous n'avons pas eu le temps de répondre à la question du choix des classifieurs utilisés pour le vote : les $n$ meilleurs, les meilleurs sur chacun des sous-ensembles de validation, ...
+  Nous étions également contraints par les temps d'ajustement des modèles.
+
+  De plus, afin de réduire ces temps d'ajustement, nous aurions peut-être pu utiliser la classe \textbf{HalvingGridSearchCV} permettant d'ajuster les hyper-paramètres en allouant peu de ressources au début de la recherche et en éliminant les combinaisons les plus mauvaises au fur et à mesure que plus de ressources sont allouées.
+  Notre souci avec cette technique a été le fort déséquilibre dans les classes à prédire pour les premières itération de la recherche.
+
+  Par ailleurs, nous avons des doutes sur la grille d'hyper-paramètres choisie pour l'ACP car les combinaisons l'employant se trouvaient systématiquement assez loin des autres en terme de performance.
+  Peut-être aurait-il fallu élargir l'amplitude du nombre de composantes de l'ACP à conserver, mais encore une fois le temps d'ajustement des modèles nous a empêché de revenir sur notre choix initial.
+
+  Enfin, nous avons décidé de ne pas utiliser de réseaux de neurones en raison du fort risque de sûr-apprentissage dû au faible nombre d'observations à notre disposition et du grand nombre d'hyper-paramètres à considérer avec ce types de modèles.
+  De plus, le coût calculatoire s'en serait encore trouvé augmenté.
 
 \end{document}
