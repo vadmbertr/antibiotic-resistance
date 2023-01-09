@@ -58,7 +58,7 @@ def _custom_parser(params, n_jobs):
     chunks = params.split(", '")
     parsed_params = {}
     for chunk in chunks:
-        if "StabilitySelectionTransformer" in chunk:
+        if "StabilitySelection" in chunk:
             key = "dim_red"
             value = StabilitySelectionTransformer(n_jobs=n_jobs)
         else:
